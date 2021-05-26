@@ -2,6 +2,7 @@ name: Greeting from Mona
 
 on: push
 
+
 jobs:
   my-job:
     name: My Job
