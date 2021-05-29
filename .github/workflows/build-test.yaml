@@ -12,7 +12,7 @@ jobs:
       - name: build-docker-image
         run: |
           echo "Retrieving latest source code from github . . ."
-          f [ ! -d "git_source_code" ]; then git clone $GITHUB_REPO_URL git_source_code; fi
+          f [[ ! -d "git_source_code" ]]; then git clone $GITHUB_REPO_URL git_source_code; fi
           cd git_source_code && git pull && cd ..;
           echo "Building image from Dockerfile and tagging it with git commit hash . . ."
           docker build git_source_code --file git_source_code/Dockerfile --tag node_express_api:$COMMIT_SHA_TAG --tag node_express_api:latest
@@ -21,7 +21,7 @@ jobs:
     needs: build
     steps:
       - name: run-test-container
-        run: docker run node_express_api:{{ github.sha }} --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --detach --name test_node_express_api
+        run: docker run node_express_api:$COMMIT_SHA_TAG --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --detach --name test_node_express_api
       - name: curl-test-container
         run: |
           echo "Attempting curl request to running test container . . ."
