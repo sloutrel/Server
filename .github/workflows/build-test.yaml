@@ -16,7 +16,7 @@ jobs:
   job2:
     name: test-image
     runs-on: [self-hosted, linux, ARM64]
-    needs: build
+    needs: job1
     env:
       APP_SERVER_PORT: 3000
       TEST_CONTAINER_PORT: 3001
