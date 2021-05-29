@@ -5,8 +5,7 @@ on:
     types:
       - completed
 jobs:
-  job1:
-    name: deploy
+  deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, linux, ARM64]
     env:
