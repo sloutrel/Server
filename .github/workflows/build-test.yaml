@@ -1,0 +1,35 @@
+name: build-test
+on: push
+jobs:
+  job1:
+    name: build
+    runs-on: [self-hosted, linux, ARM64]
+    env:
+      GITHUB_REPO_URL: https://github.com/sloutrel/Server.git
+    steps:
+      - name: build-docker-image
+        run: |
+          echo "Retrieving source code from github . . ."
+          git clone $GITHUB_REPO_URL git_source_code
+          echo "Building image from Dockerfile and tagging it with git commit hash . . ."
+          docker build git_source_code --file git_source_code/Dockerfile --tag node_express_api:{{ github.sha }} --tag node_express_api:latest
+  job2:
+    name: test-image
+    runs-on: [self-hosted, linux, ARM64]
+    needs: build
+    env:
+      APP_SERVER_PORT: 3000
+      TEST_CONTAINER_PORT: 3001
+    steps:
+      - name: run-test-container
+        run: docker run node_express_api:{{ github.sha }} --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --detach --name test_node_express_api
+      - name: curl-test-container
+        run: |
+          echo "Attempting curl request to running test container . . ."
+          curl --verbose --head localhost:$TEST_CONTAINER_PORT
+          echo "Checking that http status code is SUCCESS 200 . . ."
+          HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out "%{http_code}\n" --silent --output test-response-content.txt)
+          if [ "$HTTP_STATUS_CODE" != "200" ]; then echo "Unexpected http statuse code: $HTTP_STATUS_CODE" && exit 1; fi
+          echo "Successful HTTP response code: $HTTP_STATUS_CODE"
+      - name: remove-test-container
+        run: docker rm --force test_node_express_api
