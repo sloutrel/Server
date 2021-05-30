@@ -1,0 +1,26 @@
+name: deploy
+on:
+  workflow_run:
+    workflows: ["build-test"]
+    types:
+      - completed
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: [self-hosted, linux, ARM64]
+    env:
+      IMAGE_NAME: node_express_api
+      APP_SERVER_PORT: 3000
+      COMMIT_SHA_TAG: ${{ github.sha }}
+    steps:
+      - name: remove-existing-container
+        run: |
+          echo "Checking if pre-existing container is running image $IMAGE_NAME . . ."
+          export EXISTING_CONTAINER_ID=$(docker ps --quiet --filter ancestor=$IMAGE_NAME)
+          if [[ -z "${EXISTING_CONTAINER_ID-}" ]]; then echo "No existing container is running for $IMAGE_NAME. Exiting remove-existing-container step." && exit 0; fi
+          echo "Getting information on existing container . . ."
+          docker inspect $EXISTING_CONTAINER_ID --format 'ID {{ .Id }} {{printf "\n"}}Started at {{ .State.StartedAt }} {{printf "\n"}}Image ID {{ .Image }}'
+          echo "Removing existing container . . ."
+          docker rm --force $EXISTING_CONTAINER_ID
+      - name: run-new-container
+        run: docker run --publish 80:$APP_SERVER_PORT --detach $IMAGE_NAME:$COMMIT_SHA_TAG
