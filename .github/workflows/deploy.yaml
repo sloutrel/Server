@@ -19,10 +19,9 @@ jobs:
       APP_SERVER_PORT: 3000
       COMMIT_SHA_TAG: ${{ github.sha }}
     steps:
-        - run: echo "Test for accessing github.sha $COMMIT_SHA_TAG"
         - run: |
-            export EXISTING_CONTAINER_ID=$(sudo docker ps --quiet --filter ancestor=$IMAGE_NAME)
-            if [[ -z "${EXISTING_CONTAINER_ID-}" ]]; then echo "No existing container is running for $IMAGE_NAME. Exiting current step." && exit 0; fi
+            export EXISTING_CONTAINER_ID=$(sudo docker ps --quiet --filter name=$IMAGE_NAME)
+            if [[ -z "${EXISTING_CONTAINER_ID-}" ]]; then echo "No existing container named $IMAGE_NAME is running. Exiting current step." && exit 0; fi
             sudo docker inspect $EXISTING_CONTAINER_ID --format 'ID {{ .Id }} {{printf "\n"}}Started at {{ .State.StartedAt }} {{printf "\n"}}Image ID {{ .Image }}'
             sudo docker rm --force $EXISTING_CONTAINER_ID
-        - run: sudo docker run --publish 80:$APP_SERVER_PORT --detach $IMAGE_NAME:latest
+        - run: sudo docker run --name $IMAGE_NAME --detach --publish 80:$APP_SERVER_PORT $IMAGE_NAME:$COMMIT_SHA_TAG
