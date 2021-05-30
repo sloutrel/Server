@@ -15,6 +15,7 @@ jobs:
     steps:
       - name: remove-existing-container
         run: |
+          echo "Test for accessing github.sha: $COMMIT_SHA_TAG"
           echo "Checking if pre-existing container is running image $IMAGE_NAME . . ."
           export EXISTING_CONTAINER_ID=$(docker ps --quiet --filter ancestor=$IMAGE_NAME)
           if [[ -z "${EXISTING_CONTAINER_ID-}" ]]; then echo "No existing container is running for $IMAGE_NAME. Exiting remove-existing-container step." && exit 0; fi
@@ -23,4 +24,4 @@ jobs:
           echo "Removing existing container . . ."
           docker rm --force $EXISTING_CONTAINER_ID
       - name: run-new-container
-        run: docker run --publish 80:$APP_SERVER_PORT --detach $IMAGE_NAME:$COMMIT_SHA_TAG
+        run: docker run --publish 80:$APP_SERVER_PORT --detach $IMAGE_NAME:latest
