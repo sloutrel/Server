@@ -18,26 +18,16 @@ jobs:
   build:
     runs-on: [self-hosted, linux, ARM64]
     steps:
-      - name: build-docker-image
-        run: |
-          echo "Retrieving latest source code from github . . ."
-          if [[ ! -d "git_source_code" ]]; then git clone $GITHUB_REPO_URL git_source_code; fi
-          cd git_source_code && git pull && cd ..
-          echo "Building image from Dockerfile and tagging it with git commit hash . . ."
-          sudo docker build git_source_code --file git_source_code/Dockerfile --tag node_express_api:$COMMIT_SHA_TAG --tag node_express_api:latest
+        - run: if [[ ! -d "git_source_code" ]]; then echo "git_source_code directory not found, cloning $GITHUB_REPO_URL . . ." && git clone $GITHUB_REPO_URL git_source_code; fi
+        - run: cd git_source_code && git pull && cd ..
+        - run: sudo docker build git_source_code --file git_source_code/Dockerfile --tag node_express_api:$COMMIT_SHA_TAG --tag node_express_api:latest
   test:
     runs-on: [self-hosted, linux, ARM64]
     needs: build
     steps:
-      - name: run-test-container
-        run: sudo docker run --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name test_node_express_api --detach node_express_api:$COMMIT_SHA_TAG
-      - name: curl-test-container
-        run: |
-          echo "Attempting curl request to running test container . . ."
-          curl --verbose --head localhost:$TEST_CONTAINER_PORT
-          echo "Checking that http status code is SUCCESS 200 . . ."
-          HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out "%{http_code}\n" --silent --output test-response-content.txt)
-          if [ "$HTTP_STATUS_CODE" != "200" ]; then echo "Unexpected http statuse code: $HTTP_STATUS_CODE" && exit 1; fi
-          echo "Successful HTTP response code: $HTTP_STATUS_CODE"
-      - name: remove-test-container
-        run: sudo docker rm --force test_node_express_api
+        - run: sudo docker run --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name test_node_express_api --detach node_express_api:$COMMIT_SHA_TAG
+        - run: curl --verbose --head localhost:$TEST_CONTAINER_PORT
+        - run: export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out "%{http_code}\n" --silent --output test-response-content.txt)
+        - run: if [ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
+        - run: echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
+        - run: sudo docker rm --force test_node_express_api
