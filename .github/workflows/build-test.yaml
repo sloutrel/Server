@@ -22,15 +22,15 @@ jobs:
         run: |
           echo "Retrieving latest source code from github . . ."
           if [[ ! -d "git_source_code" ]]; then git clone $GITHUB_REPO_URL git_source_code; fi
-          cd git_source_code && git pull && cd ..;
+          cd git_source_code && git pull && cd ..
           echo "Building image from Dockerfile and tagging it with git commit hash . . ."
-          docker build git_source_code --file git_source_code/Dockerfile --tag node_express_api:$COMMIT_SHA_TAG --tag node_express_api:latest
+          sudo docker build git_source_code --file git_source_code/Dockerfile --tag node_express_api:$COMMIT_SHA_TAG --tag node_express_api:latest
   test:
     runs-on: [self-hosted, linux, ARM64]
     needs: build
     steps:
       - name: run-test-container
-        run: docker run node_express_api:$COMMIT_SHA_TAG --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --detach --name test_node_express_api
+        run: sudo docker run --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name test_node_express_api --detach node_express_api:$COMMIT_SHA_TAG
       - name: curl-test-container
         run: |
           echo "Attempting curl request to running test container . . ."
@@ -40,4 +40,4 @@ jobs:
           if [ "$HTTP_STATUS_CODE" != "200" ]; then echo "Unexpected http statuse code: $HTTP_STATUS_CODE" && exit 1; fi
           echo "Successful HTTP response code: $HTTP_STATUS_CODE"
       - name: remove-test-container
-        run: docker rm --force test_node_express_api
+        run: sudo docker rm --force test_node_express_api
