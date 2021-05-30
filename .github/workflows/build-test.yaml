@@ -3,6 +3,12 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Image Tag'
+        required: false
+        default: 'latest'
 env:
   GITHUB_REPO_URL: https://github.com/sloutrel/Server.git
   COMMIT_SHA_TAG: ${{ github.sha }}

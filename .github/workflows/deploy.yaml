@@ -4,6 +4,12 @@ on:
     workflows: ["build-test"]
     types:
       - completed
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Image Tag'
+        required: false
+        default: 'latest'
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
