@@ -28,6 +28,6 @@ jobs:
         - run: sudo docker run --publish $TEST_CONTAINER_PORT:$APP_SERVER_PORT --name test_node_express_api --detach node_express_api:$COMMIT_SHA_TAG
         - run: sleep 5 && curl --verbose --head localhost:$TEST_CONTAINER_PORT
         - run: export CURL_TEST_HTTP_STATUS_CODE=$(curl localhost:$TEST_CONTAINER_PORT --write-out "%{http_code}\n" --silent --output test-response-content.txt)
-        - run: if [ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
+        - run: if [[ "$CURL_TEST_HTTP_STATUS_CODE" != "200" ]]; then echo "Unexpected http status code $CURL_TEST_HTTP_STATUS_CODE" && exit 1; fi
         - run: echo "Successful HTTP response code $CURL_TEST_HTTP_STATUS_CODE"
         - run: sudo docker rm --force test_node_express_api
