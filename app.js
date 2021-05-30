@@ -25,6 +25,9 @@ app.post("/dogs", (req, res) => {
 app.get("/dogs", (req, res) => {
   res.send("woof");
 });
+app.get("/frogs", (req, res) => {
+  res.send("ribbit");
+});
 app.get("/search", (req, res) => {
   const { q } = req.query;
   if (!q) {
