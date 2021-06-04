@@ -25,6 +25,9 @@ app.post("/dogs", (req, res) => {
 app.get("/dogs", (req, res) => {
   res.send("woof");
 });
+app.get("/cows", (req, res) => {
+  res.send("moo");
+});
 app.get("/frogs", (req, res) => {
   res.send("ribbit");
 });
